@@ -102,7 +102,7 @@ class LoginPage extends StatelessWidget {
                                 const Text('Belum punya akun? '),
                                 GestureDetector(
                                   onTap: () {
-                                    Navigator.push(
+                                    Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>

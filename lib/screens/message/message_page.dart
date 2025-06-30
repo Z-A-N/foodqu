@@ -11,9 +11,7 @@ class MessagePage extends StatelessWidget {
         automaticallyImplyLeading: false,
         title: const Row(
           children: [
-            CircleAvatar(
-              backgroundImage: AssetImage('assets/images/driver.png'),
-            ),
+            CircleAvatar(backgroundImage: AssetImage('assets/icon/driver.png')),
             SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

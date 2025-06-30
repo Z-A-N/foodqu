@@ -1,269 +1,129 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../widgets/custom_header_with_search.dart';
-import 'terdekat_page.dart';
-import 'enak_loh_page.dart';
-import 'diskon_page.dart';
-import 'voucher_page.dart';
-import 'makanan_page.dart';
+
+import 'burger_page.dart';
+import 'hemat_page.dart';
 import 'minuman_page.dart';
-import 'jajan_page.dart';
+import 'snack_page.dart';
+import 'kids_meal_page.dart';
+import 'voucher_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final menuItems = [
+      {
+        'title': 'Burger',
+        'image': 'assets/icon/Burger.png',
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const BurgerPage()),
+        ),
+        'isHot': true,
+      },
+      {
+        'title': 'Minuman',
+        'image': 'assets/icon/Minuman.png',
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MinumanPage()),
+        ),
+      },
+      {
+        'title': 'Snack',
+        'image': 'assets/icon/snack.png',
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SnackPage()),
+        ),
+      },
+      {
+        'title': 'Kids Meal',
+        'image': 'assets/icon/kids_meal.png',
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const KidsMealPage()),
+        ),
+      },
+      {
+        'title': 'Hemat',
+        'image': 'assets/icon/paket_hemat.png',
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const HematPage()),
+        ),
+      },
+      {
+        'title': 'Voucher',
+        'image': 'assets/icon/Voucher.png',
+        'onTap': () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const VoucherPage()),
+        ),
+      },
+    ];
+
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // App Bar
-                const CustomHeaderWithSearch(title: 'Beranda'),
-                const SizedBox(height: 20),
-
-                // Banner Promo
-                SizedBox(height: 140, child: _BannerCarousel()),
-                const SizedBox(height: 24),
-
-                // Menu Kategori (Semua pakai gambar)
-                const Text(
-                  'Layanan Teratas',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  
+        child: Column(
+          children: [
+            const CustomHeaderWithSearch(title: 'Beranda'),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildMenuItemWithImage(
-                      'Terdekat',
-                      'assets/icon/terdekat.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const TerdekatPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildMenuItemWithImage(
-                      'Enak loh',
-                      'assets/icon/rekomen.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const EnakLohPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildMenuItemWithImage(
-                      'Diskon',
-                      'assets/icon/diskon.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const DiskonPage()),
-                        );
-                      },
-                    ),
-                    _buildMenuItemWithImage(
-                      'Voucher',
-                      'assets/icon/voucher.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const VoucherPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildMenuItemWithImage(
-                      'Makanan',
-                      'assets/icon/makanan.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const MakananPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildMenuItemWithImage(
-                      'Minuman',
-                      'assets/icon/minuman.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const MinumanPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildMenuItemWithImage(
-                      'Jajan',
-                      'assets/icon/jajan.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const JajanPage()),
-                        );
-                      },
-                    ),
-                    _buildMenuItemWithImage(
-                      'Lainnya',
-                      'assets/icon/lainnya.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const TerdekatPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                    const SizedBox(height: 20),
+                    const SizedBox(height: 140, child: _BannerCarousel()),
+                    const SizedBox(height: 24),
 
-                const SizedBox(height: 24),
-
-                // Rekomendasi
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Rekomendasi',
+                    const Text(
+                      'Menu Utama',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text('See all', style: TextStyle(color: Colors.orange)),
+                    const SizedBox(height: 12),
+                    _HorizontalMenu(items: menuItems),
+
+                    const SizedBox(height: 24),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Rekomendasi',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Lihat semua',
+                          style: TextStyle(color: Colors.orange),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const _RecommendationList(),
                   ],
                 ),
-                const SizedBox(height: 12),
-
-                SizedBox(
-                  height: 220,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _buildFoodCard(
-                        'Mie Ayam Noni',
-                        'assets/images/mie.png',
-                        5.0,
-                        1927,
-                      ),
-                      _buildFoodCard(
-                        'Amazy Geprek Baturaden',
-                        'assets/images/ama.png',
-                        4.8,
-                        287,
-                      ),
-                      _buildFoodCard(
-                        'Ketoprak Baper',
-                        'assets/images/keto.png',
-                        4.5,
-                        156,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItemWithImage(
-    String title,
-    String imagePath, {
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: 70, // ukuran tetap agar Wrap bekerja rapi
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircleAvatar(
-              backgroundColor: Colors.orange[100],
-              radius: 28,
-              child: Image.asset(imagePath, height: 28),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildFoodCard(
-    String title,
-    String imagePath,
-    double rating,
-    int reviews,
-  ) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              imagePath,
-              height: 100,
-              width: 140,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.star, color: Colors.orange, size: 16),
-              const SizedBox(width: 4),
-              Text('$rating'),
-              const SizedBox(width: 4),
-              Text('($reviews)', style: const TextStyle(color: Colors.grey)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _BannerCarousel extends StatefulWidget {
+  const _BannerCarousel();
+
   @override
   State<_BannerCarousel> createState() => _BannerCarouselState();
 }
@@ -292,7 +152,7 @@ class _BannerCarouselState extends State<_BannerCarousel> {
   @override
   void initState() {
     super.initState();
-    _controller = PageController(initialPage: 1000); // start dari tengah
+    _controller = PageController(initialPage: 1000);
     Future.delayed(Duration.zero, () {
       Timer.periodic(const Duration(seconds: 4), (timer) {
         if (!mounted) return;
@@ -315,7 +175,7 @@ class _BannerCarouselState extends State<_BannerCarousel> {
     return PageView.builder(
       controller: _controller,
       itemBuilder: (context, index) {
-        final banner = banners[index % banners.length]; // infinite loop
+        final banner = banners[index % banners.length];
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 6),
           padding: const EdgeInsets.all(12),
@@ -351,6 +211,205 @@ class _BannerCarouselState extends State<_BannerCarousel> {
           ),
         );
       },
+    );
+  }
+}
+
+class _HorizontalMenu extends StatelessWidget {
+  final List<Map<String, dynamic>> items;
+
+  const _HorizontalMenu({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: items.map((item) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: _MenuItem(
+              title: item['title'],
+              imagePath: item['image'],
+              onTap: item['onTap'],
+              isHot: item['isHot'] ?? false,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _MenuItem extends StatelessWidget {
+  final String title;
+  final String imagePath;
+  final VoidCallback onTap;
+  final bool isHot;
+
+  const _MenuItem({
+    required this.title,
+    required this.imagePath,
+    required this.onTap,
+    this.isHot = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          Container(
+            width: 80,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(imagePath, height: 40),
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isHot)
+            Positioned(
+              top: 4,
+              left: 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'HOT',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendationList extends StatelessWidget {
+  const _RecommendationList();
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      {
+        'title': 'Beef Burger Jumbo',
+        'image': 'assets/images/Beef_Burger_Jumbo.png',
+        'rating': 4.9,
+        'reviews': 512,
+      },
+      {
+        'title': 'Cheese Burger',
+        'image': 'assets/images/Cheese_Burger.png',
+        'rating': 4.7,
+        'reviews': 231,
+      },
+      {
+        'title': 'Burger Ayam Crispy',
+        'image': 'assets/images/Crispy_Chicken_Burger.png',
+        'rating': 4.5,
+        'reviews': 156,
+      },
+    ];
+
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return _FoodCard(
+            title: item['title'] as String,
+            imagePath: item['image'] as String,
+            rating: item['rating'] as double,
+            reviews: item['reviews'] as int,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FoodCard extends StatelessWidget {
+  final String title;
+  final String imagePath;
+  final double rating;
+  final int reviews;
+
+  const _FoodCard({
+    required this.title,
+    required this.imagePath,
+    required this.rating,
+    required this.reviews,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              imagePath,
+              height: 100,
+              width: 140,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.star, color: Colors.orange, size: 16),
+              const SizedBox(width: 4),
+              Text('$rating'),
+              const SizedBox(width: 4),
+              Text('($reviews)', style: const TextStyle(color: Colors.grey)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

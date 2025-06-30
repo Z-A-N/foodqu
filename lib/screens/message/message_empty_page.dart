@@ -16,7 +16,7 @@ class MessageEmptyPage extends StatelessWidget {
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  Image.asset('assets/images/empty_chat.png', height: 160),
+                  Image.asset('assets/icon/empty_chat.png', height: 160),
                   const SizedBox(height: 24),
                   const Text(
                     'Belum ada order aktif',

@@ -21,34 +21,24 @@ class HistoryDetailPage extends StatelessWidget {
             Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  order['image'],
-                  height: 180,
-                  fit: BoxFit.cover,
-                ),
+                child: _buildImage(order['image']),
               ),
             ),
             const SizedBox(height: 20),
-            // ID Pemesanan
             Text(
               "ID Pemesanan: ${order['id']}",
               style: TextStyle(fontSize: 14, color: Colors.grey[700]),
             ),
             const SizedBox(height: 8),
-
-            // Judul
             Text(
               order['title'],
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            // Deskripsi
             Text(
               order['description'] ?? '',
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 24),
-
-            // Info detail
             _buildDetailRow(Icons.calendar_today, "Tanggal", order['date']),
             const SizedBox(height: 12),
             _buildDetailRow(Icons.attach_money, "Harga", order['price']),
@@ -63,6 +53,31 @@ class HistoryDetailPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildImage(String? path) {
+    if (path == null || path.isEmpty) {
+      return _fallbackImage();
+    }
+
+    return Image.asset(
+      path,
+      height: 180,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => _fallbackImage(),
+    );
+  }
+
+  Widget _fallbackImage() {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(Icons.image_not_supported, size: 64, color: Colors.orange),
       ),
     );
   }

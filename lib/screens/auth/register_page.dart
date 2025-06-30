@@ -52,10 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
             children: [
               const Text(
                 'Syarat & Ketentuan',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -74,29 +71,35 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 20),
               SafeArea(
                 top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                      child: Center(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() => agreeTerms = true);
-                              Navigator.pop(context);
-                              },
-                            style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF5722),
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            'Setuju',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                            ),
-                          ),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() => agreeTerms = true);
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF5722),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
+                      child: const Text(
+                        'Setuju',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
+              ),
             ],
           ),
         ),
@@ -209,9 +212,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                 value: gender,
                                 items: const [
                                   DropdownMenuItem(
-                                      value: 'Laki-laki', child: Text('Laki-laki')),
+                                    value: 'Laki-laki',
+                                    child: Text('Laki-laki'),
+                                  ),
                                   DropdownMenuItem(
-                                      value: 'Perempuan', child: Text('Perempuan')),
+                                    value: 'Perempuan',
+                                    child: Text('Perempuan'),
+                                  ),
                                 ],
                                 onChanged: (value) {
                                   setState(() {
@@ -225,7 +232,10 @@ class _RegisterPageState extends State<RegisterPage> {
                           GestureDetector(
                             onTap: () => _selectDate(context),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 14,
+                              ),
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey),
                                 borderRadius: BorderRadius.circular(12),
@@ -248,7 +258,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                    showPassword ? Icons.visibility_off : Icons.visibility),
+                                  showPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
                                 onPressed: () {
                                   setState(() {
                                     showPassword = !showPassword;
@@ -269,7 +282,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                    showConfirmPassword ? Icons.visibility_off : Icons.visibility),
+                                  showConfirmPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
                                 onPressed: () {
                                   setState(() {
                                     showConfirmPassword = !showConfirmPassword;
@@ -298,14 +314,18 @@ class _RegisterPageState extends State<RegisterPage> {
                                   child: RichText(
                                     text: const TextSpan(
                                       text: 'Saya menyetujui ',
-                                      style: TextStyle(color: Colors.black, fontSize: 13),
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 13,
+                                      ),
                                       children: [
                                         TextSpan(
                                           text: 'Syarat & Ketentuan',
                                           style: TextStyle(
                                             color: Color(0xFFFF5722),
                                             fontWeight: FontWeight.bold,
-                                            decoration: TextDecoration.underline,
+                                            decoration:
+                                                TextDecoration.underline,
                                           ),
                                         ),
                                       ],
@@ -346,10 +366,11 @@ class _RegisterPageState extends State<RegisterPage> {
                               const Text('Sudah punya akun? '),
                               GestureDetector(
                                 onTap: () {
-                                  Navigator.push(
+                                  Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => const LoginPage()),
+                                      builder: (context) => const LoginPage(),
+                                    ),
                                   );
                                 },
                                 child: const Text(

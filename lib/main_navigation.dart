@@ -16,7 +16,7 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  final bool hasActiveOrder = false; // Simulasi status order aktif
+  final bool hasActiveOrder = true; // Simulasi status order aktif
 
   final List<IconData> _icons = [
     Icons.home,

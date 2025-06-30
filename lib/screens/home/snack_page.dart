@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_header_with_search.dart';
 
-class MinumanPage extends StatelessWidget {
-  const MinumanPage({super.key});
+class SnackPage extends StatelessWidget {
+  const SnackPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> drinkMenu = [
+    final List<Map<String, dynamic>> snackMenu = [
       {
-        'title': 'Es Teh Jumbo',
-        'image': 'assets/images/Es_Teh_Jumbo.png',
-        'rating': 4.9,
-        'reviews': 1023,
-        'price': '8.000',
+        'title': 'French Fries',
+        'image': 'assets/images/French_Fries.png',
+        'rating': 4.8,
+        'reviews': 875,
+        'price': '12.000',
       },
       {
-        'title': 'Lemon Tea Segar',
-        'image': 'assets/images/Lemon_Tea_Segar.png',
-        'rating': 4.7,
-        'reviews': 654,
+        'title': 'Cheese Sticks',
+        'image': 'assets/images/Cheese_Sticks.png',
+        'rating': 4.6,
+        'reviews': 539,
         'price': '10.000',
       },
       {
-        'title': 'Cola Dingin',
-        'image': 'assets/images/Cola_Dingin.png',
-        'rating': 4.6,
-        'reviews': 782,
-        'price': '9.000',
+        'title': 'Nugget Box',
+        'image': 'assets/images/Nugget_Box.png',
+        'rating': 4.7,
+        'reviews': 618,
+        'price': '15.000',
       },
     ];
 
@@ -34,19 +34,16 @@ class MinumanPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const CustomHeaderWithSearch(
-              title: 'Minuman',
-              showBackButton: true,
-            ),
+            const CustomHeaderWithSearch(title: 'Snack', showBackButton: true),
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                itemCount: drinkMenu.length + 1, // 1 banner + list
+                itemCount: snackMenu.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) return _buildTopBanner();
 
-                  final item = drinkMenu[index - 1];
-                  return _buildDrinkItem(
+                  final item = snackMenu[index - 1];
+                  return _buildSnackItem(
                     image: item['image'],
                     title: item['title'],
                     rating: item['rating'],
@@ -67,16 +64,16 @@ class MinumanPage extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue[100],
+        color: Colors.amber[100],
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Image.asset('assets/images/drink.png', height: 60),
+          Image.asset('assets/images/snack.png', height: 60),
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
-              'Segarkan harimu dengan minuman spesial dari Foodqu!',
+              'Cemilan lezat siap temani harimu!',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
@@ -85,7 +82,7 @@ class MinumanPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDrinkItem({
+  Widget _buildSnackItem({
     required String image,
     required String title,
     required double rating,
