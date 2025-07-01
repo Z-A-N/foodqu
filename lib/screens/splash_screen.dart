@@ -1,5 +1,8 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import '../main_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:flutter/foundation.dart';
 import 'auth/login_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -10,17 +13,40 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
 
-    Future.delayed(const Duration(seconds: 4), () {
-      if (!mounted) return; // << penting untuk hindari warning
+  Future<void> checkLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = prefs.getString('uid');
+
+    if (kDebugMode) {
+      print('🟡 SplashScreen: UID ditemukan = $uid');
+    }
+
+    if (!mounted) return;
+
+    if (uid != null && uid.isNotEmpty) {
+      if (kDebugMode) {
+        print('✅ SplashScreen: Navigasi ke MainNavigation');
+      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigation()),
+      );
+    } else {
+      if (kDebugMode) {
+        print('🟥 SplashScreen: Navigasi ke LoginPage');
+      }
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
-    });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 4), checkLogin);
   }
 
   @override

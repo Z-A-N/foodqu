@@ -1,4 +1,6 @@
 // lib/auth/register_page.dart
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 
@@ -20,6 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool agreeTerms = false;
   bool showPassword = false;
   bool showConfirmPassword = false;
+  bool isLoading = false;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -337,7 +340,129 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
-                            onPressed: () {},
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    if (!agreeTerms) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Anda harus menyetujui Syarat & Ketentuan',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    if (passwordController.text !=
+                                        confirmPasswordController.text) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Password dan Konfirmasi tidak cocok',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    if (selectedDate == null) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Tanggal lahir belum dipilih',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    setState(() => isLoading = true);
+
+                                    try {
+                                      final authResult = await FirebaseAuth
+                                          .instance
+                                          .createUserWithEmailAndPassword(
+                                            email: emailController.text.trim(),
+                                            password: passwordController.text
+                                                .trim(),
+                                          );
+
+                                      await FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(authResult.user!.uid)
+                                          .set({
+                                            'uid': authResult.user!.uid,
+                                            'name': nameController.text.trim(),
+                                            'email': emailController.text
+                                                .trim(),
+                                            'telepon': phoneController.text
+                                                .trim(),
+                                            'gender': gender,
+                                            'tanggal_lahir': selectedDate!
+                                                .toIso8601String(),
+                                            'created_at': Timestamp.now(),
+                                          });
+
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Registrasi berhasil! Silakan login.',
+                                            ),
+                                          ),
+                                        );
+
+                                        await Future.delayed(
+                                          const Duration(seconds: 1),
+                                        );
+
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const LoginPage(),
+                                          ),
+                                        );
+                                      }
+                                    } on FirebaseAuthException catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              e.message ?? 'Registrasi gagal',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Terjadi kesalahan: $e',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } finally {
+                                      if (context.mounted) {
+                                        setState(() => isLoading = false);
+                                      }
+                                    }
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFF5722),
                               shape: RoundedRectangleBorder(
@@ -349,15 +474,26 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               elevation: 6,
                             ),
-                            child: const Text(
-                              'DAFTAR',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Text(
+                                    'DAFTAR',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                           const SizedBox(height: 16),
                           Row(

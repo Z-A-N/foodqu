@@ -1,13 +1,20 @@
 // lib/auth/forgot_password_page.dart
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class ForgotPasswordPage extends StatelessWidget {
+class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final emailController = TextEditingController();
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+}
 
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final emailController = TextEditingController();
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -85,9 +92,56 @@ class ForgotPasswordPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: () {
-                            // TODO: Add your password reset logic here
-                          },
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  final email = emailController.text.trim();
+
+                                  if (email.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Email tidak boleh kosong',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  setState(() => isLoading = true);
+
+                                  try {
+                                    await FirebaseAuth.instance
+                                        .sendPasswordResetEmail(email: email);
+
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Link reset dikirim ke $email',
+                                          ),
+                                        ),
+                                      );
+                                      Navigator.pop(
+                                        context,
+                                      ); // Kembali ke LoginPage
+                                    }
+                                  } on FirebaseAuthException catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          e.message ?? 'Gagal mengirim reset',
+                                        ),
+                                      ),
+                                    );
+                                  } finally {
+                                    if (context.mounted) {
+                                      setState(() => isLoading = false);
+                                    }
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFF5722),
                             shape: RoundedRectangleBorder(
@@ -99,15 +153,26 @@ class ForgotPasswordPage extends StatelessWidget {
                             ),
                             elevation: 6,
                           ),
-                          child: const Text(
-                            'KIRIM LINK RESET',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text(
+                                  'KIRIM LINK RESET',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                         const SizedBox(height: 16),
                         GestureDetector(
@@ -119,10 +184,10 @@ class ForgotPasswordPage extends StatelessWidget {
                               color: Color(0xFFFF5722),
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

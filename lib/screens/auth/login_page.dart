@@ -1,17 +1,27 @@
 // lib/auth/login_page.dart
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
 import '../../main_navigation.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
+  State<LoginPage> createState() => _LoginPageState();
+}
 
+class _LoginPageState extends State<LoginPage> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool showPassword = false;
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -84,10 +94,22 @@ class LoginPage extends StatelessWidget {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: passwordController,
-                          obscureText: true,
+                          obscureText: !showPassword,
                           decoration: InputDecoration(
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                showPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  showPassword = !showPassword;
+                                });
+                              },
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -139,14 +161,87 @@ class LoginPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const MainNavigation(),
-                              ),
-                            );
-                          },
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  final email = emailController.text.trim();
+                                  final password = passwordController.text
+                                      .trim();
+
+                                  if (email.isEmpty || password.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Email dan password tidak boleh kosong',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  setState(() => isLoading = true);
+
+                                  try {
+                                    if (kDebugMode) {
+                                      print('👉 Mulai login...');
+                                    }
+                                    final userCredential = await FirebaseAuth
+                                        .instance
+                                        .signInWithEmailAndPassword(
+                                          email: email,
+                                          password: password,
+                                        );
+
+                                    if (kDebugMode) {
+                                      print(
+                                      '✅ Login berhasil: ${userCredential.user?.uid}',
+                                    );
+                                    }
+
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    await prefs.setString(
+                                      'uid',
+                                      userCredential.user!.uid,
+                                    );
+
+                                    if (kDebugMode) {
+                                      print(
+                                      '✅ UID disimpan ke SharedPreferences',
+                                    );
+                                    }
+
+                                    if (context.mounted) {
+                                      if (kDebugMode) {
+                                        print('🚀 Navigasi ke MainNavigation');
+                                      }
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const MainNavigation(),
+                                        ),
+                                      );
+                                    }
+                                  } on FirebaseAuthException catch (e) {
+                                    if (kDebugMode) {
+                                      print(
+                                      '❌ Login gagal: ${e.code} - ${e.message}',
+                                    );
+                                    }
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          e.message ?? 'Login gagal',
+                                        ),
+                                      ),
+                                    );
+                                  } finally {
+                                    if (context.mounted) {
+                                      setState(() => isLoading = false);
+                                    }
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFF5722),
                             shape: RoundedRectangleBorder(
@@ -158,15 +253,26 @@ class LoginPage extends StatelessWidget {
                             ),
                             elevation: 6,
                           ),
-                          child: const Text(
-                            'LOGIN',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text(
+                                  'LOGIN',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                       ],
                     ),

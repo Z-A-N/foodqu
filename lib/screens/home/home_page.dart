@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_header_with_search.dart';
-
 import 'burger_page.dart';
 import 'hemat_page.dart';
 import 'minuman_page.dart';
 import 'snack_page.dart';
 import 'kids_meal_page.dart';
 import 'voucher_page.dart';
+import 'product_detail_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -80,7 +82,6 @@ class HomePage extends StatelessWidget {
                     const SizedBox(height: 20),
                     const SizedBox(height: 140, child: _BannerCarousel()),
                     const SizedBox(height: 24),
-
                     const Text(
                       'Menu Utama',
                       style: TextStyle(
@@ -90,7 +91,6 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     _HorizontalMenu(items: menuItems),
-
                     const SizedBox(height: 24),
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -349,11 +349,26 @@ class _RecommendationList extends StatelessWidget {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
-          return _FoodCard(
-            title: item['title'] as String,
-            imagePath: item['image'] as String,
-            rating: item['rating'] as double,
-            reviews: item['reviews'] as int,
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProductDetailPage(
+                    title: item['title'] as String,
+                    imagePath: item['image'] as String,
+                    rating: item['rating'] as double,
+                    reviews: item['reviews'] as int,
+                  ),
+                ),
+              );
+            },
+            child: _FoodCard(
+              title: item['title'] as String,
+              imagePath: item['image'] as String,
+              rating: item['rating'] as double,
+              reviews: item['reviews'] as int,
+            ),
           );
         },
       ),
@@ -361,7 +376,7 @@ class _RecommendationList extends StatelessWidget {
   }
 }
 
-class _FoodCard extends StatelessWidget {
+class _FoodCard extends StatefulWidget {
   final String title;
   final String imagePath;
   final double rating;
@@ -375,6 +390,54 @@ class _FoodCard extends StatelessWidget {
   });
 
   @override
+  State<_FoodCard> createState() => _FoodCardState();
+}
+
+class _FoodCardState extends State<_FoodCard> {
+  late final String _uid;
+  late final String _docId;
+  bool _isFav = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _docId = widget.title.toLowerCase().replaceAll(' ', '-');
+    _checkFavoriteStatus();
+  }
+
+  void _checkFavoriteStatus() async {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_uid)
+        .collection('favorites')
+        .doc(_docId)
+        .get();
+    if (mounted) setState(() => _isFav = doc.exists);
+  }
+
+  void _toggleFavorite() async {
+    final ref = FirebaseFirestore.instance
+        .collection('users')
+        .doc(_uid)
+        .collection('favorites')
+        .doc(_docId);
+
+    if (_isFav) {
+      await ref.delete();
+    } else {
+      await ref.set({
+        'title': widget.title,
+        'image': widget.imagePath,
+        'rating': widget.rating,
+        'reviews': widget.reviews,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+    if (mounted) setState(() => _isFav = !_isFav);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       width: 140,
@@ -382,18 +445,41 @@ class _FoodCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              imagePath,
-              height: 100,
-              width: 140,
-              fit: BoxFit.cover,
-            ),
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  widget.imagePath,
+                  height: 100,
+                  width: 140,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: InkWell(
+                  onTap: _toggleFavorite,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      _isFav ? Icons.favorite : Icons.favorite_border,
+                      size: 16,
+                      color: _isFav ? Colors.red : Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
-            title,
+            widget.title,
             style: const TextStyle(fontWeight: FontWeight.bold),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -403,9 +489,12 @@ class _FoodCard extends StatelessWidget {
             children: [
               const Icon(Icons.star, color: Colors.orange, size: 16),
               const SizedBox(width: 4),
-              Text('$rating'),
+              Text('${widget.rating}'),
               const SizedBox(width: 4),
-              Text('($reviews)', style: const TextStyle(color: Colors.grey)),
+              Text(
+                '(${widget.reviews})',
+                style: const TextStyle(color: Colors.grey),
+              ),
             ],
           ),
         ],
