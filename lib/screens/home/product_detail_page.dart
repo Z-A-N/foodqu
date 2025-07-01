@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String title;
   final String imagePath;
   final double rating;
   final int reviews;
-  final int price; // Tambahan
-  final String description; // Tambahan
+  final int price;
+  final String description;
 
   const ProductDetailPage({
     super.key,
@@ -14,8 +16,8 @@ class ProductDetailPage extends StatefulWidget {
     required this.imagePath,
     required this.rating,
     required this.reviews,
-    required this.price,         // Tambahan
-    required this.description,   // Tambahan
+    required this.price,
+    required this.description,
   });
 
   @override
@@ -24,6 +26,37 @@ class ProductDetailPage extends StatefulWidget {
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
   String selectedSize = 'Regular';
+
+  Future<void> _addToCart() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final cartRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('cart')
+        .doc(widget.title); // Bisa diganti pakai ID unik jika ada
+
+    final doc = await cartRef.get();
+
+    if (doc.exists) {
+      await cartRef.update({'quantity': FieldValue.increment(1)});
+    } else {
+      await cartRef.set({
+        'title': widget.title,
+        'image': widget.imagePath,
+        'price': widget.price,
+        'quantity': 1,
+        'size': selectedSize,
+      });
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Berhasil ditambahkan ke keranjang')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +107,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Judul dan harga dari parameter
+                    // Judul dan harga
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -107,7 +140,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Ukuran/Porsi
+                    // Ukuran
                     const Text(
                       'Pilih Ukuran / Porsi',
                       style: TextStyle(fontWeight: FontWeight.w600),
@@ -142,7 +175,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                     const SizedBox(height: 20),
 
-                    // Deskripsi dari parameter
+                    // Deskripsi
                     Text(
                       widget.description,
                       style: const TextStyle(fontSize: 15, color: Colors.grey),
@@ -154,9 +187,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Tambah ke keranjang
-                        },
+                        onPressed: _addToCart,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
                           shape: RoundedRectangleBorder(

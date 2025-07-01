@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CheckoutPage extends StatefulWidget {
   final List<Map<String, dynamic>> cartItems;
   final int totalPrice;
+  final String userId;
 
   const CheckoutPage({
     super.key,
     required this.cartItems,
     required this.totalPrice,
+    required this.userId,
   });
 
   @override
@@ -34,39 +37,44 @@ class _CheckoutPageState extends State<CheckoutPage> {
         backgroundColor: Colors.orange,
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Jenis Pengiriman'),
-            _buildDeliveryOptions(),
-            const SizedBox(height: 16),
-            _buildSectionTitle('Metode Pembayaran'),
-            _paymentMethodSelector(),
-            if (_selectedPaymentMethod == 'E-Wallet') _buildEwalletOptions(),
-            if (_selectedPaymentMethod == 'Bank') _buildBankOptions(),
-            const SizedBox(height: 16),
-            _buildSectionTitle('Voucher'),
-            _buildVoucherInput(),
-            const SizedBox(height: 16),
-            _buildSectionTitle('Ringkasan Pembayaran'),
-            _buildSummary(),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _onCheckout,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Center(
-                child: Text('Bayar Sekarang', style: TextStyle(fontSize: 16)),
-              ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle('Jenis Pengiriman'),
+              _buildDeliveryOptions(),
+              const SizedBox(height: 16),
+              _buildSectionTitle('Metode Pembayaran'),
+              _paymentMethodSelector(),
+              if (_selectedPaymentMethod == 'E-Wallet') _buildEwalletOptions(),
+              if (_selectedPaymentMethod == 'Bank') _buildBankOptions(),
+              const SizedBox(height: 16),
+              _buildSectionTitle('Voucher'),
+              _buildVoucherInput(),
+              const SizedBox(height: 16),
+              _buildSectionTitle('Ringkasan Pembayaran'),
+              _buildSummary(),
+              const SizedBox(
+                height: 80,
+              ), // Tambahan ruang supaya tidak terlalu bawah
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.all(16),
+        child: ElevatedButton(
+          onPressed: _onCheckout,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.deepOrange,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
+          ),
+          child: const Text('Bayar Sekarang', style: TextStyle(fontSize: 16)),
         ),
       ),
     );
@@ -80,21 +88,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildDeliveryOptions() {
-    return Row(
+    return Column(
       children: [
-        Radio<String>(
+        RadioListTile<String>(
+          title: const Text('Standar (Rp5.000)'),
           value: 'Standar',
           groupValue: _deliveryType,
           onChanged: (value) => setState(() => _deliveryType = value),
         ),
-        const Text('Standar (Rp5.000)'),
-        const SizedBox(width: 16),
-        Radio<String>(
+        RadioListTile<String>(
+          title: const Text('Prioritas (Rp15.000)'),
           value: 'Prioritas',
           groupValue: _deliveryType,
           onChanged: (value) => setState(() => _deliveryType = value),
         ),
-        const Text('Prioritas (Rp15.000)'),
       ],
     );
   }
@@ -392,11 +399,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
+    // Simulasi proses bayar
     await Future.delayed(const Duration(seconds: 2));
+
+    // Hapus semua item di keranjang user
+    final cartRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .collection('cart');
+
+    final cartSnapshot = await cartRef.get();
+    for (var doc in cartSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
     if (!mounted) return;
+    Navigator.pop(context); // Tutup loading
 
-    Navigator.pop(context);
-
+    // Tampilkan bottom sheet sukses
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -425,8 +445,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context); // Kembali ke halaman sebelumnya
+                  Navigator.pop(context); // Tutup bottom sheet
+                  Navigator.pop(context); // Kembali ke OrderPage
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepOrange,
