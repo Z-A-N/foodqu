@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'personal_info_page.dart';
 import 'address_page.dart';
 import '../widgets/custom_header_with_search.dart';
@@ -15,6 +19,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String name = '';
   String email = '';
+  String? photoUrl;
   bool isLoading = true;
 
   @override
@@ -30,18 +35,69 @@ class _ProfilePageState extends State<ProfilePage> {
           .collection('users')
           .doc(user.uid)
           .get();
+
       if (doc.exists) {
+        final data = doc.data();
         setState(() {
-          name = doc['name'] ?? '';
-          email = doc['email'] ?? user.email ?? '';
+          name = data?['name'] ?? 'User';
+          email = data?['email'] ?? user.email ?? '';
+          photoUrl = data?['photoUrl']; // bisa null, default ditangani di UI
           isLoading = false;
         });
       } else {
+        // Dokumen tidak ada
         setState(() {
           name = 'User';
           email = user.email ?? '';
+          photoUrl = 'assets/images/pp.png';
           isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _pickImageAndUpload() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) throw Exception('User tidak ditemukan');
+
+        final file = File(pickedFile.path);
+        final storageRef = FirebaseStorage.instance.ref().child(
+          'user_photos/${user.uid}.jpg',
+        );
+
+        // ✅ Upload file ke Firebase Storage
+        final uploadTask = await storageRef.putFile(file);
+        final snapshot = uploadTask;
+
+        // ✅ Pastikan upload sukses sebelum ambil URL
+        if (snapshot.state == TaskState.success) {
+          final downloadUrl = await storageRef.getDownloadURL();
+
+          // ✅ Simpan photoUrl ke Firestore
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .update({'photoUrl': downloadUrl});
+
+          setState(() {
+            photoUrl = downloadUrl;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Foto profil berhasil diperbarui')),
+          );
+        } else {
+          throw Exception('Upload gagal');
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal upload foto: $e')));
       }
     }
   }
@@ -118,19 +174,14 @@ class _ProfilePageState extends State<ProfilePage> {
         Stack(
           alignment: Alignment.bottomRight,
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 50,
-              backgroundImage: AssetImage('assets/images/profile.png'),
+              backgroundImage: photoUrl != null
+                  ? NetworkImage(photoUrl!)
+                  : const AssetImage('assets/images/pp.png') as ImageProvider,
             ),
             GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PersonalInfoPage(),
-                  ),
-                );
-              },
+              onTap: _pickImageAndUpload,
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: const BoxDecoration(
@@ -221,10 +272,15 @@ class _ProfilePageState extends State<ProfilePage> {
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
+
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('uid'); // 🟢 Hapus UID agar tidak auto-login
+
+              await FirebaseAuth.instance.signOut();
+
               if (context.mounted) {
-                FirebaseAuth.instance.signOut();
                 Navigator.pushNamedAndRemoveUntil(
                   context,
                   '/login',

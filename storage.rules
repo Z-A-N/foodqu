@@ -1,0 +1,9 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /user_photos/{userId}.jpg {
+      // Hanya user yang sedang login dan memiliki UID yang sama yang bisa upload/baca
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

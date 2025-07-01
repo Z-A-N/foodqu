@@ -194,8 +194,8 @@ class _LoginPageState extends State<LoginPage> {
 
                                     if (kDebugMode) {
                                       print(
-                                      '✅ Login berhasil: ${userCredential.user?.uid}',
-                                    );
+                                        '✅ Login berhasil: ${userCredential.user?.uid}',
+                                      );
                                     }
 
                                     final prefs =
@@ -207,8 +207,8 @@ class _LoginPageState extends State<LoginPage> {
 
                                     if (kDebugMode) {
                                       print(
-                                      '✅ UID disimpan ke SharedPreferences',
-                                    );
+                                        '✅ UID disimpan ke SharedPreferences',
+                                      );
                                     }
 
                                     if (context.mounted) {
@@ -226,20 +226,40 @@ class _LoginPageState extends State<LoginPage> {
                                   } on FirebaseAuthException catch (e) {
                                     if (kDebugMode) {
                                       print(
-                                      '❌ Login gagal: ${e.code} - ${e.message}',
-                                    );
+                                        '❌ Login gagal: ${e.code} - ${e.message}',
+                                      );
                                     }
+                                    String errorMessage;
+
+                                    switch (e.code) {
+                                      case 'user-not-found':
+                                        errorMessage = 'Akun belum terdaftar';
+                                        break;
+                                      case 'wrong-password':
+                                        errorMessage = 'Password salah';
+                                        break;
+                                      case 'invalid-email':
+                                        errorMessage =
+                                            'Format email tidak valid';
+                                        break;
+                                      case 'user-disabled':
+                                        errorMessage =
+                                            'Akun telah dinonaktifkan';
+                                        break;
+                                      case 'too-many-requests':
+                                        errorMessage =
+                                            'Terlalu banyak percobaan, coba lagi nanti';
+                                        break;
+                                      default:
+                                        errorMessage =
+                                            'Login gagal: ${e.message}';
+                                    }
+
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          e.message ?? 'Login gagal',
-                                        ),
-                                      ),
+                                      SnackBar(content: Text(errorMessage)),
                                     );
                                   } finally {
-                                    if (context.mounted) {
-                                      setState(() => isLoading = false);
-                                    }
+                                    setState(() => isLoading = false);
                                   }
                                 },
                           style: ElevatedButton.styleFrom(

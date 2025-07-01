@@ -1,35 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../widgets/custom_header_with_search.dart';
+import 'product_detail_page.dart';
 
 class KidsMealPage extends StatelessWidget {
   const KidsMealPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> kidsMenu = [
-      {
-        'title': 'Mini Burger Set',
-        'image': 'assets/images/Mini_Burger_Set.png',
-        'rating': 4.9,
-        'reviews': 732,
-        'price': '18.000',
-      },
-      {
-        'title': 'Happy Nugget Meal',
-        'image': 'assets/images/Happy_Nugget_Meal.png',
-        'rating': 4.8,
-        'reviews': 528,
-        'price': '20.000',
-      },
-      {
-        'title': 'Fun Meal Box',
-        'image': 'assets/images/Fun_Meal_Box.png',
-        'rating': 4.7,
-        'reviews': 480,
-        'price': '22.000',
-      },
-    ];
-
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -39,19 +17,58 @@ class KidsMealPage extends StatelessWidget {
               showBackButton: true,
             ),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                itemCount: kidsMenu.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) return _buildTopBanner();
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('products')
+                    .where('category', isEqualTo: 'kids-meal')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  final item = kidsMenu[index - 1];
-                  return _buildKidsMealItem(
-                    image: item['image'],
-                    title: item['title'],
-                    rating: item['rating'],
-                    reviews: item['reviews'],
-                    price: item['price'],
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                      child: Text('Tidak ada produk Kids Meal.'),
+                    );
+                  }
+
+                  final products = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    itemCount: products.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) return _buildTopBanner();
+
+                      final item = products[index - 1];
+                      final data = item.data() as Map<String, dynamic>;
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProductDetailPage(
+                                title: data['title'],
+                                imagePath: data['image'],
+                                rating: (data['rating'] as num).toDouble(),
+                                reviews: data['reviews'],
+                                price: data['price'],
+                                description: data['description'],
+                              ),
+                            ),
+                          );
+                        },
+                        child: _buildKidsMealItem(
+                          image: data['image'],
+                          title: data['title'],
+                          rating: (data['rating'] as num).toDouble(),
+                          reviews: data['reviews'],
+                          price: data['price'],
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -90,7 +107,7 @@ class KidsMealPage extends StatelessWidget {
     required String title,
     required double rating,
     required int reviews,
-    required String price,
+    required int price,
   }) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),

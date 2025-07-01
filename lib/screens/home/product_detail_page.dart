@@ -5,6 +5,8 @@ class ProductDetailPage extends StatefulWidget {
   final String imagePath;
   final double rating;
   final int reviews;
+  final int price; // Tambahan
+  final String description; // Tambahan
 
   const ProductDetailPage({
     super.key,
@@ -12,6 +14,8 @@ class ProductDetailPage extends StatefulWidget {
     required this.imagePath,
     required this.rating,
     required this.reviews,
+    required this.price,         // Tambahan
+    required this.description,   // Tambahan
   });
 
   @override
@@ -70,7 +74,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Judul dan harga dummy
+                    // Judul dan harga dari parameter
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -83,9 +87,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             ),
                           ),
                         ),
-                        const Text(
-                          'Rp 25.000',
-                          style: TextStyle(
+                        Text(
+                          'Rp ${widget.price}',
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -103,7 +107,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Ukuran/Porsi (opsional)
+                    // Ukuran/Porsi
                     const Text(
                       'Pilih Ukuran / Porsi',
                       style: TextStyle(fontWeight: FontWeight.w600),
@@ -138,11 +142,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
                     const SizedBox(height: 20),
 
-                    // Deskripsi produk dummy
-                    const Text(
-                      'Nikmati burger spesial kami dengan daging sapi pilihan, roti lembut, dan keju meleleh. '
-                      'Dibuat segar setiap hari untuk memanjakan lidah kamu.',
-                      style: TextStyle(fontSize: 15, color: Colors.grey),
+                    // Deskripsi dari parameter
+                    Text(
+                      widget.description,
+                      style: const TextStyle(fontSize: 15, color: Colors.grey),
                     ),
 
                     const Spacer(),

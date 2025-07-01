@@ -1,35 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_header_with_search.dart';
+import 'product_detail_page.dart';
 
 class MinumanPage extends StatelessWidget {
   const MinumanPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> drinkMenu = [
-      {
-        'title': 'Es Teh Jumbo',
-        'image': 'assets/images/Es_Teh_Jumbo.png',
-        'rating': 4.9,
-        'reviews': 1023,
-        'price': '8.000',
-      },
-      {
-        'title': 'Lemon Tea Segar',
-        'image': 'assets/images/Lemon_Tea_Segar.png',
-        'rating': 4.7,
-        'reviews': 654,
-        'price': '10.000',
-      },
-      {
-        'title': 'Cola Dingin',
-        'image': 'assets/images/Cola_Dingin.png',
-        'rating': 4.6,
-        'reviews': 782,
-        'price': '9.000',
-      },
-    ];
-
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -39,19 +17,31 @@ class MinumanPage extends StatelessWidget {
               showBackButton: true,
             ),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                itemCount: drinkMenu.length + 1, // 1 banner + list
-                itemBuilder: (context, index) {
-                  if (index == 0) return _buildTopBanner();
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('products')
+                    .where('category', isEqualTo: 'minuman')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  final item = drinkMenu[index - 1];
-                  return _buildDrinkItem(
-                    image: item['image'],
-                    title: item['title'],
-                    rating: item['rating'],
-                    reviews: item['reviews'],
-                    price: item['price'],
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('Tidak ada produk.'));
+                  }
+
+                  final products = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    itemCount: products.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) return _buildTopBanner();
+
+                      final product = products[index - 1];
+                      return _buildItemCard(context, product);
+                    },
                   );
                 },
               ),
@@ -85,72 +75,94 @@ class MinumanPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDrinkItem({
-    required String image,
-    required String title,
-    required double rating,
-    required int reviews,
-    required String price,
-  }) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              image,
-              width: 100,
-              height: 80,
-              fit: BoxFit.cover,
+  Widget _buildItemCard(BuildContext context, QueryDocumentSnapshot doc) {
+    final String title = doc['title'];
+    final String image = doc['image'];
+    final double rating = doc['rating'].toDouble();
+    final int reviews = doc['reviews'];
+    final int price = doc['price'];
+    final String description = doc['description'];
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailPage(
+              title: title,
+              imagePath: image,
+              rating: rating,
+              reviews: reviews,
+              price: price,
+              description: description,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.orange, size: 16),
-                    const SizedBox(width: 4),
-                    Text('$rating'),
-                    const SizedBox(width: 4),
-                    Text(
-                      '($reviews)',
-                      style: const TextStyle(color: Colors.grey),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                image,
+                width: 100,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Rp $price',
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.orange, size: 16),
+                      const SizedBox(width: 4),
+                      Text('$rating'),
+                      const SizedBox(width: 4),
+                      Text(
+                        '($reviews)',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Rp ${price.toString()}',
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

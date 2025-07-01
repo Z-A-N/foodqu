@@ -1,54 +1,53 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../widgets/custom_header_with_search.dart';
+import 'product_detail_page.dart';
 
 class SnackPage extends StatelessWidget {
   const SnackPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> snackMenu = [
-      {
-        'title': 'French Fries',
-        'image': 'assets/images/French_Fries.png',
-        'rating': 4.8,
-        'reviews': 875,
-        'price': '12.000',
-      },
-      {
-        'title': 'Cheese Sticks',
-        'image': 'assets/images/Cheese_Sticks.png',
-        'rating': 4.6,
-        'reviews': 539,
-        'price': '10.000',
-      },
-      {
-        'title': 'Nugget Box',
-        'image': 'assets/images/Nugget_Box.png',
-        'rating': 4.7,
-        'reviews': 618,
-        'price': '15.000',
-      },
-    ];
-
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             const CustomHeaderWithSearch(title: 'Snack', showBackButton: true),
+            _buildTopBanner(),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                itemCount: snackMenu.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) return _buildTopBanner();
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('products')
+                    .where('category', isEqualTo: 'snack')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Terjadi kesalahan'));
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                  final item = snackMenu[index - 1];
-                  return _buildSnackItem(
-                    image: item['image'],
-                    title: item['title'],
-                    rating: item['rating'],
-                    reviews: item['reviews'],
-                    price: item['price'],
+                  final docs = snapshot.data!.docs;
+
+                  if (docs.isEmpty) {
+                    return const Center(child: Text('Tidak ada produk snack'));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final data = docs[index].data() as Map<String, dynamic>;
+                      return _SnackItemCard(
+                        image: data['image'],
+                        title: data['title'],
+                        rating: (data['rating'] as num).toDouble(),
+                        reviews: data['reviews'],
+                        price: data['price'],
+                        description: data['description'],
+                      );
+                    },
                   );
                 },
               ),
@@ -61,7 +60,7 @@ class SnackPage extends StatelessWidget {
 
   Widget _buildTopBanner() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.amber[100],
@@ -81,73 +80,107 @@ class SnackPage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildSnackItem({
-    required String image,
-    required String title,
-    required double rating,
-    required int reviews,
-    required String price,
-  }) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              image,
-              width: 100,
-              height: 80,
-              fit: BoxFit.cover,
+class _SnackItemCard extends StatelessWidget {
+  final String image;
+  final String title;
+  final double rating;
+  final int reviews;
+  final int price;
+  final String description;
+
+  const _SnackItemCard({
+    required this.image,
+    required this.title,
+    required this.rating,
+    required this.reviews,
+    required this.price,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailPage(
+              title: title,
+              imagePath: image,
+              rating: rating,
+              reviews: reviews,
+              price: price,
+              description: description,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.orange, size: 16),
-                    const SizedBox(width: 4),
-                    Text('$rating'),
-                    const SizedBox(width: 4),
-                    Text(
-                      '($reviews)',
-                      style: const TextStyle(color: Colors.grey),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                image,
+                width: 100,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Rp $price',
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.orange, size: 16),
+                      const SizedBox(width: 4),
+                      Text('$rating'),
+                      const SizedBox(width: 4),
+                      Text(
+                        '($reviews)',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Rp ${price.toString()}',
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

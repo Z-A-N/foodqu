@@ -321,54 +321,53 @@ class _RecommendationList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      {
-        'title': 'Beef Burger Jumbo',
-        'image': 'assets/images/Beef_Burger_Jumbo.png',
-        'rating': 4.9,
-        'reviews': 512,
-      },
-      {
-        'title': 'Cheese Burger',
-        'image': 'assets/images/Cheese_Burger.png',
-        'rating': 4.7,
-        'reviews': 231,
-      },
-      {
-        'title': 'Burger Ayam Crispy',
-        'image': 'assets/images/Crispy_Chicken_Burger.png',
-        'rating': 4.5,
-        'reviews': 156,
-      },
-    ];
-
     return SizedBox(
       height: 220,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ProductDetailPage(
-                    title: item['title'] as String,
-                    imagePath: item['image'] as String,
-                    rating: item['rating'] as double,
-                    reviews: item['reviews'] as int,
-                  ),
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('products')
+            .orderBy('rating', descending: true)
+            .limit(10)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(child: Text('Terjadi kesalahan'));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final docs = snapshot.data!.docs;
+
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final data = docs[index].data() as Map<String, dynamic>;
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailPage(
+                        title: data['title'],
+                        imagePath: data['image'],
+                        rating: data['rating'].toDouble(),
+                        reviews: data['reviews'],
+                        price: data['price'],
+                        description: data['description'],
+                      ),
+                    ),
+                  );
+                },
+                child: _FoodCard(
+                  title: data['title'],
+                  imagePath: data['image'],
+                  rating: data['rating'].toDouble(),
+                  reviews: data['reviews'],
                 ),
               );
             },
-            child: _FoodCard(
-              title: item['title'] as String,
-              imagePath: item['image'] as String,
-              rating: item['rating'] as double,
-              reviews: item['reviews'] as int,
-            ),
           );
         },
       ),
